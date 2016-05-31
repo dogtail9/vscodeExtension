@@ -43,20 +43,22 @@ export function activate(context: vscode.ExtensionContext) {
         var markdownFiles = ['Test.md', 'Architecture.md', 'ReleaseNotes.md', 'SystemDocumentation.md', 'UserGuide.md'];
         for (var index in markdownFiles) {
             var file = markdownFiles[index];
-            saveFile(markdownRoot + file, getContent(file));
+            if (!fs.existsSync(markdownRoot + file)) {
+                saveFile(markdownRoot + file, getContent(file));
+            }
         }
-
+        
         let mediaRoot = markdownRoot + 'Media\\'
         createDirectory(mediaRoot);
-        //saveFile(mediaRoot + 'Image.png', getContent('Image.png'));
-        copyFile(myContext.asAbsolutePath('files/Image.png'), mediaRoot + 'Image.png');
-
+        var file = mediaRoot + 'Image.png';
+        
+        if (!fs.existsSync(file)) {
+            copyFile(myContext.asAbsolutePath('files/Image.png'), file);
+        }
+        
         statusBarMessage.dispose();
         statusBarMessage = vscode.window.setStatusBarMessage('Running npm install ...');
         runCommandInOutputWindow();
-
-        // Display a message box to the user
-
     });
 
     context.subscriptions.push(disposable);

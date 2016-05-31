@@ -1,6 +1,5 @@
-//var minPort = 1000;
-//var maxPort = 1998;
-//var myPort = Math.floor(Math.random() * (maxPort - minPort + 1) + minPort);
+var minNum = 1000;
+var maxNum = 1999;
 
 var Promise = require('bluebird');
 var async = require('asyncawait/async');
@@ -98,13 +97,14 @@ function getDistPath(filename) {
 
 function saveFile(newFilename, html) {
     createDistFolderIfNotExist();
-    var tempFilename = paths.Dist + '/temp.html';
+    var temp = Math.floor(Math.random() * (maxNum - minNum + 1) + minNum);
+    var tempFilename = paths.Dist + '/' + temp + '.html';
 
+    deleteFileIfExists(tempFilename);
+    
     fs.writeFile(tempFilename, html, function (err) {
         if (err) return console.log(err);
-        deleteFileIfExists(tempFilename);
         fs.renameSync(tempFilename, newFilename);
-
         console.log('File ' + newFilename + ' saved.');
     });
 };
@@ -133,7 +133,7 @@ var processFile = async(function (er, files) {
         console.log('Converting ' + filename + ' to HTML');
         var html = await(convertFile(filename));
         var tempFilename = getDistPath(filename);
-        saveFile2(tempFilename, html);
+        saveFile(tempFilename, html);
     };
 });
 
