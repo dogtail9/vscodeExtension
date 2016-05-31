@@ -1,0 +1,29 @@
+{
+  "name": "npmbuild",
+  "version": "1.0.0",
+  "description": "Convert Markdown to HTML",
+  "scripts": {
+    "convert": "node convert.js",
+    "watch:convert": "watch \"npm run convert\" .\\Markdown",
+    "watch:reload": "livereload .\\dist --port 9090",
+    "watch": "parallelshell \"npm run watch:reload\" \"npm run watch:convert\""
+  },
+  "author": "Christer Eriksson (CHER12)",
+  "license": "MIT",
+  "dependencies": {
+    "asyncawait": "^1.0.3",
+    "bluebird": "^3.4.0",
+    "glob": "^7.0.3",
+    "highlight.js": "^9.4.0",
+    "img64": "^0.3.1",
+    "markdown-toc": "^0.12.11",
+    "remarkable": "^1.6.2",
+    "replace-ext": "0.0.1"
+  },
+  "devDependencies": {
+    "livereload": "^0.4.1",
+    "parallelshell": "^2.0.0",
+    "watch": "^0.18.0",
+    "rimraf": "^2.5.2"
+  }
+}

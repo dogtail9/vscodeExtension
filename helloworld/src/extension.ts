@@ -3,12 +3,18 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as cp from 'child_process';
 
 let myContext;
+let outputChannel: vscode.OutputChannel;
+var statusBarMessage: vscode.Disposable;
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     myContext = context;
+    outputChannel = vscode.window.createOutputChannel("npm");
+    outputChannel.show();
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
@@ -20,29 +26,44 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
         // The code you place here will be executed every time your command is executed
 
-        // Display a message box to the user
+        statusBarMessage = vscode.window.setStatusBarMessage('Adding documentation files ...');
         let documentationRoot = vscode.workspace.rootPath + '\\';// + '\\Documentation\\';
         createDirectory(documentationRoot);
-        //copyFile(context.asAbsolutePath('files/convert.txt'), documentationRoot + 'convert.js');
-        saveFile(documentationRoot + 'convert.js', getConvertJsText());
-        saveFile(documentationRoot + 'package.json', getPackageJsonText());
-        saveFile(documentationRoot + 'Template.html', getTemplateHtmlText());
+        saveFile(documentationRoot + 'convert.js', getContent('convert.js'));
+        saveFile(documentationRoot + 'package.json', getContent('package.json'));
+        saveFile(documentationRoot + 'Template.html', getContent('Template.html'));
+
+        let vscodeRoot = documentationRoot + '.vscode\\';
+        createDirectory(vscodeRoot);
+        saveFile(vscodeRoot + 'tasks.json', getContent('tasks.json'));
 
         let markdownRoot = documentationRoot + 'Markdown\\';
         createDirectory(markdownRoot);
-        saveFile(markdownRoot + 'Test.md', getTextMarkdownText());
+
+        var markdownFiles = ['Test.md', 'Architecture.md', 'ReleaseNotes.md', 'SystemDocumentation.md', 'UserGuide.md'];
+        for (var index in markdownFiles) {
+            var file = markdownFiles[index];
+            saveFile(markdownRoot + file, getContent(file));
+        }
 
         let mediaRoot = markdownRoot + 'Media\\'
         createDirectory(mediaRoot);
+        //saveFile(mediaRoot + 'Image.png', getContent('Image.png'));
+        copyFile(myContext.asAbsolutePath('files/Image.png'), mediaRoot + 'Image.png');
 
-        vscode.window.showInformationMessage('Documentation added!');
+        statusBarMessage.dispose();
+        statusBarMessage = vscode.window.setStatusBarMessage('Running npm install ...');
+        runCommandInOutputWindow();
+
+        // Display a message box to the user
+
     });
 
     context.subscriptions.push(disposable);
 }
 
 function copyFile(src: string, dest: string) {
-    fs.readFile(src, 'utf8', (err, data) => {
+    fs.readFile(src, (err, data) => {
         if (err) throw err;
 
         fs.writeFile(dest, data, (err) => {
@@ -64,21 +85,25 @@ function saveFile(path: string, data: string) {
     });
 }
 
-function getConvertJsText(): string {
-    let data = fs.readFileSync(myContext.asAbsolutePath('files/convert.txt'));
+function getContent(path: string): string {
+    let data = fs.readFileSync(myContext.asAbsolutePath('files/' + path));
     return String(data);
 }
 
-function getPackageJsonText(): string {
-    return 'package';
-}
-
-function getTemplateHtmlText(): string {
-    return 'template';
-}
-
-function getTextMarkdownText(): string {
-    return 'test';
+function runCommandInOutputWindow() {
+    let cmd = 'npm install';
+    let p = cp.exec(cmd, { cwd: vscode.workspace.rootPath, env: process.env });
+    p.stderr.on('data', (data: string) => {
+        outputChannel.append(data);
+    });
+    p.stdout.on('data', (data: string) => {
+        outputChannel.append(data);
+    });
+    p.stdout.on('end', () => {
+        statusBarMessage.dispose();
+        vscode.window.setStatusBarMessage('Documentation added!', 2000);
+        vscode.window.showInformationMessage('Documentation added!');
+    });
 }
 
 // this method is called when your extension is deactivated
